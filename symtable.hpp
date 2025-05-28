@@ -9,21 +9,21 @@
 #include "output.hpp"
 
 // Table entry structure to hold symbol information
-struct TableEntry {
+struct Symbol {
     std::string name;
     ast::BuiltInType type;
     int offset;
     bool isFunction;
     std::vector<ast::BuiltInType> paramTypes; // For functions
 
-    TableEntry() = default;
+    Symbol() = default;
     
-    TableEntry(const std::string& n, ast::BuiltInType t, int o, bool isFunc = false) 
+    Symbol(const std::string& n, ast::BuiltInType t, int o, bool isFunc = false) 
         : name(n), type(t), offset(o), isFunction(isFunc) {}
 };
 
 // Type alias for table
-using Table = std::vector<TableEntry>;
+using Table = std::vector<Symbol>;
 
 class SymTable
 {
@@ -35,7 +35,7 @@ private:
     std::stack<int> offsetsStack;
     
     // Global map to check if a symbol exists (no shadowing allowed)
-    std::unordered_map<std::string, TableEntry> symbols;
+    std::unordered_map<std::string, Symbol> symbols;
     
     // ScopePrinter for output
     output::ScopePrinter scopePrinter;
@@ -56,7 +56,7 @@ public:
     
     // Symbol lookup
     bool exists(const std::string& name) const;
-    TableEntry* lookup(const std::string& name);
+    Symbol* lookup(const std::string& name);
     
     // Print current state (handled internally by ScopePrinter)
     void printScopes() const;

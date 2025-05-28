@@ -5,6 +5,7 @@
 
 SymTable::SymTable() {
     // Initialize with global scope
+    enterScope();
     addFunc("print", ast::BuiltInType::VOID, {ast::BuiltInType::STRING});
     addFunc("printi", ast::BuiltInType::VOID, {ast::BuiltInType::INT});
 }
@@ -40,7 +41,7 @@ void SymTable::addVar(const std::string& name, ast::BuiltInType type) {
     }
     
     int currentOffset = offsetsStack.top();
-    TableEntry entry(name, type, currentOffset, false);
+    Symbol entry(name, type, currentOffset, false);
     tablesStack.top().push_back(entry);
     symbols[name] = entry;
     
@@ -56,7 +57,7 @@ void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType,
         return;
     }
     
-    TableEntry entry(name, returnType, 0, true);
+    Symbol entry(name, returnType, 0, true);
     entry.paramTypes = paramTypes;
     tablesStack.top().push_back(entry);
     symbols[name] = entry;
@@ -74,7 +75,7 @@ void SymTable::addParam(const std::string& name, ast::BuiltInType type) {
     offsetsStack.top() -= 1;
     int currentOffset = offsetsStack.top();
     
-    TableEntry entry(name, type, currentOffset, false);
+    Symbol entry(name, type, currentOffset, false);
     // Insert at the beginning of the vector for reverse order
     tablesStack.top().insert(tablesStack.top().begin(), entry);
     symbols[name] = entry;
@@ -86,7 +87,7 @@ bool SymTable::exists(const std::string& name) const {
     return symbols.find(name) != symbols.end();
 }
 
-TableEntry* SymTable::lookup(const std::string& name) {
+Symbol* SymTable::lookup(const std::string& name) {
     // First check the global map for existence
     auto globalIt = symbols.find(name);
     if (globalIt != symbols.end()) {

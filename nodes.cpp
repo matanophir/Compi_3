@@ -89,7 +89,7 @@ namespace ast {
     ArrayDereference::ArrayDereference(std::shared_ptr<ID> id, std::shared_ptr<Exp> index)
             : Exp(), id(std::move(id)), index(std::move(index)) {}
     
-    Formal::Formal(std::shared_ptr<ID> id, std::shared_ptr<Type> type)
+    Formal::Formal(std::shared_ptr<ID> id, std::shared_ptr<PrimitiveType> type)
             : Node(), id(std::move(id)), type(std::move(type)) {}
 
     Formals::Formals(std::shared_ptr<Formal> formal) : Node(), formals({std::move(formal)}) {}
@@ -102,7 +102,7 @@ namespace ast {
         formals.push_back(formal);
     }
 
-    FuncDecl::FuncDecl(std::shared_ptr<ID> id, std::shared_ptr<Type> return_type, std::shared_ptr<Formals> formals, std::shared_ptr<Statements> body)
+    FuncDecl::FuncDecl(std::shared_ptr<ID> id, std::shared_ptr<PrimitiveType> return_type, std::shared_ptr<Formals> formals, std::shared_ptr<Statements> body)
             : Node(), id(std::move(id)), return_type(std::move(return_type)), formals(std::move(formals)), body(std::move(body)) {}
 
     Funcs::Funcs(std::shared_ptr<FuncDecl> func) : Node(), funcs({std::move(func)}) {}

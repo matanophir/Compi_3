@@ -461,10 +461,10 @@ namespace ast {
         // Identifier of the parameter
         std::shared_ptr<ID> id;
         // Type of the parameter
-        std::shared_ptr<Type> type;
+        std::shared_ptr<PrimitiveType> type;
 
         // Constructor that receives the identifier and the type
-        Formal(std::shared_ptr<ID> id, std::shared_ptr<Type> type);
+        Formal(std::shared_ptr<ID> id, std::shared_ptr<PrimitiveType> type);
 
         void accept(Visitor &visitor) override {
             visitor.visit(*this);
@@ -500,14 +500,14 @@ namespace ast {
         // Identifier of the function
         std::shared_ptr<ID> id;
         // Return type of the function
-        std::shared_ptr<Type> return_type;
+        std::shared_ptr<PrimitiveType> return_type;
         // List of formal parameters
         std::shared_ptr<Formals> formals;
         // Body of the function
         std::shared_ptr<Statements> body;
 
         // Constructor that receives the identifier, the return type, the list of formal parameters, and the body
-        FuncDecl(std::shared_ptr<ID> id, std::shared_ptr<Type> return_type, std::shared_ptr<Formals> formals, std::shared_ptr<Statements> body);
+        FuncDecl(std::shared_ptr<ID> id, std::shared_ptr<PrimitiveType> return_type, std::shared_ptr<Formals> formals, std::shared_ptr<Statements> body);
 
         void accept(Visitor &visitor) override {
             visitor.visit(*this);

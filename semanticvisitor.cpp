@@ -114,8 +114,20 @@ void SemanticVisitor::visit(ast::Formals &node) {
 
 void SemanticVisitor::visit(ast::FuncDecl &node) {
     // TODO: Implement
+
 }
 
 void SemanticVisitor::visit(ast::Funcs &node) {
     // TODO: Implement
+    std::vector<ast::BuiltInType> paramTypes;
+
+    for (auto &func : node.funcs)
+    {
+        std::vector<ast::BuiltInType> paramTypes;
+        for (const auto &formal : func->formals->formals)
+        {
+            paramTypes.push_back(formal->type->type);
+        }
+        symTable.addFunc(func->id->value, func->return_type->type, paramTypes);
+    }
 }

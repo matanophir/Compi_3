@@ -8,7 +8,7 @@
 class SemanticVisitor : public Visitor
 {
 private:
-    SymTable symbolTable;
+    SymTable symTable;
     
 public:
     SemanticVisitor();
