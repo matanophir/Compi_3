@@ -15,6 +15,8 @@ struct TableEntry {
     int offset;
     bool isFunction;
     std::vector<ast::BuiltInType> paramTypes; // For functions
+
+    TableEntry() = default;
     
     TableEntry(const std::string& n, ast::BuiltInType t, int o, bool isFunc = false) 
         : name(n), type(t), offset(o), isFunction(isFunc) {}
@@ -40,6 +42,7 @@ private:
 
 public:
     SymTable();
+    ~SymTable() { printScopes(); }
     
     // Scope management
     void enterScope();

@@ -150,9 +150,3 @@ namespace output {
 
 
 }
-
-/* SemanticVisitor class implementation */
-
-SemanticVisitor::SemanticVisitor() {
-    // Constructor - symbol table is automatically initialized
-}

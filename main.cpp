@@ -1,5 +1,6 @@
 #include "output.hpp"
 #include "nodes.hpp"
+#include "semanticvisitor.hpp"
 
 // Extern from the bison-generated parser
 extern int yyparse();

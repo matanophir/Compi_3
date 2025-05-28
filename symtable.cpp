@@ -5,7 +5,8 @@
 
 SymTable::SymTable() {
     // Initialize with global scope
-    enterScope();
+    addFunc("print", ast::BuiltInType::VOID, {ast::BuiltInType::STRING});
+    addFunc("printi", ast::BuiltInType::VOID, {ast::BuiltInType::INT});
 }
 
 void SymTable::enterScope() {
@@ -16,77 +17,69 @@ void SymTable::enterScope() {
 }
 
 void SymTable::exitScope() {
-    if (!tablesStack.empty()) {
-        // Remove symbols from global map for this scope
-        Table& currentTable = tablesStack.top();
-        for (const auto& entry : currentTable) {
-            symbols.erase(entry.name);
-        }
-        
-        tablesStack.pop();
-        offsetsStack.pop();
-        scopePrinter.endScope();
+    // Remove symbols from global map for this scope
+    Table& currentTable = tablesStack.top();
+    for (const auto& entry : currentTable) {
+        symbols.erase(entry.name);
     }
+    
+    tablesStack.pop();
+    offsetsStack.pop();
+    scopePrinter.endScope();
 }
 
 void SymTable::addVar(const std::string& name, ast::BuiltInType type) {
-    if (symbols.find(name) != symbols.end()) {
+    if (exists(name)) {
         // Symbol already exists - this is an error
         return;
     }
     
-    if (!tablesStack.empty()) {
-        // If offset is negative, reset to 0 for local variables
-        if (offsetsStack.top() < 0) {
-            offsetsStack.top() = 0;
-        }
-        
-        int currentOffset = offsetsStack.top();
-        TableEntry entry(name, type, currentOffset, false);
-        tablesStack.top().push_back(entry);
-        symbols[name] = entry;
-        
-        scopePrinter.emitVar(name, type, currentOffset);
-        // Increment offset directly
-        offsetsStack.top() += 1;
+    // If offset is negative, reset to 0 for local variables
+    if (offsetsStack.top() < 0) {
+        offsetsStack.top() = 0;
     }
+    
+    int currentOffset = offsetsStack.top();
+    TableEntry entry(name, type, currentOffset, false);
+    tablesStack.top().push_back(entry);
+    symbols[name] = entry;
+    
+    scopePrinter.emitVar(name, type, currentOffset);
+    // Increment offset directly
+    offsetsStack.top() += 1;
 }
 
 void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, 
                        const std::vector<ast::BuiltInType>& paramTypes) {
-    if (symbols.find(name) != symbols.end()) {
+    if (exists(name)) {
         // Symbol already exists - this is an error
         return;
     }
     
-    if (!tablesStack.empty()) {
-        TableEntry entry(name, returnType, 0, true);
-        entry.paramTypes = paramTypes;
-        tablesStack.top().push_back(entry);
-        symbols[name] = entry;
-        
-        scopePrinter.emitFunc(name, returnType, paramTypes);
-    }
+    TableEntry entry(name, returnType, 0, true);
+    entry.paramTypes = paramTypes;
+    tablesStack.top().push_back(entry);
+    symbols[name] = entry;
+    
+    scopePrinter.emitFunc(name, returnType, paramTypes);
 }
 
 void SymTable::addParam(const std::string& name, ast::BuiltInType type) {
-    if (symbols.find(name) != symbols.end()) {
+    if (exists(name)) {
         // Symbol already exists - this is an error
         return;
     }
     
-    if (!tablesStack.empty()) {
-        // Decrement offset first to get negative values
-        offsetsStack.top() -= 1;
-        int currentOffset = offsetsStack.top();
-        
-        TableEntry entry(name, type, currentOffset, false);
-        // Insert at the beginning of the vector for reverse order
-        tablesStack.top().insert(tablesStack.top().begin(), entry);
-        symbols[name] = entry;
-        
-        scopePrinter.emitVar(name, type, currentOffset);
-    }
+    // Decrement offset first to get negative values
+    offsetsStack.top() -= 1;
+    int currentOffset = offsetsStack.top();
+    
+    TableEntry entry(name, type, currentOffset, false);
+    // Insert at the beginning of the vector for reverse order
+    tablesStack.top().insert(tablesStack.top().begin(), entry);
+    symbols[name] = entry;
+    
+    scopePrinter.emitVar(name, type, currentOffset);
 }
 
 bool SymTable::exists(const std::string& name) const {
