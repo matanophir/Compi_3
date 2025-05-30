@@ -1,6 +1,7 @@
 #include "semanticvisitor.hpp"
+#include <iostream>
 
-SemanticVisitor::SemanticVisitor() : expected_return_type(ast::BuiltInType::UNDEF), in_while(false) {
+SemanticVisitor::SemanticVisitor() : curr_expected_return_type(ast::BuiltInType::UNDEF), in_while(false) {
     // Constructor - symbol table is automatically initialized
 }
 
@@ -41,25 +42,18 @@ void SemanticVisitor::visit(ast::ID &node) {
         output::errorUndef(node.line, node.value);
     }
     node.computedType = symbol->type;
+    node.computedIsArray = symbol->isArray;
 }
 
 void SemanticVisitor::visit(ast::BinOp &node) {
     node.left->accept(*this);
     node.right->accept(*this);
 
-    if (node.left->computedType != ast::BuiltInType::BYTE &&
-        node.left->computedType != ast::BuiltInType::INT) {
-        output::errorMismatch(node.line);
-    }
-    if (node.right->computedType != ast::BuiltInType::BYTE &&
-        node.right->computedType != ast::BuiltInType::INT) {
-        output::errorMismatch(node.line);
-    }
 
-    if (node.left->computedType != node.right->computedType) {
+    if (!(_is_numeric(node.left->computedType) && _is_numeric(node.right->computedType))) {
         output::errorMismatch(node.line);
     }
-
+    
     if (node.left->computedType == ast::BuiltInType::BYTE &&
         node.right->computedType == ast::BuiltInType::BYTE) {
         node.computedType = ast::BuiltInType::BYTE;
@@ -72,16 +66,7 @@ void SemanticVisitor::visit(ast::RelOp &node) {
     node.left->accept(*this);
     node.right->accept(*this);
 
-    if (node.left->computedType != ast::BuiltInType::BYTE &&
-        node.left->computedType != ast::BuiltInType::INT) {
-        output::errorMismatch(node.line);
-    }
-    if (node.right->computedType != ast::BuiltInType::BYTE &&
-        node.right->computedType != ast::BuiltInType::INT) {
-        output::errorMismatch(node.line);
-    }
-
-    if (node.left->computedType != node.right->computedType) {
+    if (!(_is_numeric(node.left->computedType) && _is_numeric(node.right->computedType))) {
         output::errorMismatch(node.line);
     }
     
@@ -121,6 +106,7 @@ void SemanticVisitor::visit(ast::Or &node) {
 
 void SemanticVisitor::visit(ast::ArrayType &node) {
     node.computedType = node.type;
+    node.computedIsArray = true;
 }
 
 void SemanticVisitor::visit(ast::PrimitiveType &node) {
@@ -136,16 +122,23 @@ void SemanticVisitor::visit(ast::ArrayDereference &node) {
     }
 
     node.computedType = node.id->computedType;
+    node.computedIsArray = true;
 
 }
 
 void SemanticVisitor::visit(ast::Assign &node) {
-    node.id->accept(*this);
     node.exp->accept(*this);
+    node.id->accept(*this);
 
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
     if (!_can_assign(node.exp->computedType, symbol->type)) 
+        output::errorMismatch(node.line);
+
+    if (symbol->isArray) 
+        output::ErrorInvalidAssignArray(node.id->line, node.id->value);
+
+    if (node.exp->computedIsArray)
         output::errorMismatch(node.line);
 
 }
@@ -206,8 +199,8 @@ void SemanticVisitor::visit(ast::Call &node) {
         output::errorPrototypeMismatch(node.func_id->line, node.func_id->value, param_types_str);
     } else {
         for (size_t i = 0; i < node.args->exps.size(); ++i) {
-            if (!_can_assign(node.args->exps[i]->computedType, symbol->paramTypes[i])) {
-                output::errorMismatch(node.args->exps[i]->line);
+            if (!_can_assign(node.args->exps[i]->computedType, symbol->paramTypes[i]) || node.args->exps[i]->computedIsArray) {
+                output::errorPrototypeMismatch(node.func_id->line, node.func_id->value, param_types_str);
             }
         }
     }
@@ -217,6 +210,7 @@ void SemanticVisitor::visit(ast::Call &node) {
 }
 
 void SemanticVisitor::visit(ast::Statements &node) {
+
     for (auto& statement : node.statements)
     {
         statement->accept(*this);
@@ -238,7 +232,7 @@ void SemanticVisitor::visit(ast::Continue &node) {
 
 void SemanticVisitor::visit(ast::Return &node) {
     // Check if we're inside a function (not in global scope)
-    if (expected_return_type == ast::BuiltInType::UNDEF) {
+    if (curr_expected_return_type == ast::BuiltInType::UNDEF) {
         // Return statement outside of function - this is an error
         output::errorMismatch(node.line);
         return;
@@ -248,31 +242,92 @@ void SemanticVisitor::visit(ast::Return &node) {
         // Return with expression
         node.exp->accept(*this);
         ast::BuiltInType actualReturnType = node.exp->computedType;
+
+        // cant be in a void function
+        if (curr_expected_return_type == ast::BuiltInType::VOID) {
+            output::errorMismatch(node.line);
+        }
+
+        //cant return an array
+        if (node.exp->computedIsArray) {
+            output::errorMismatch(node.line);
+        }
         
         // Check if the return type matches the function's expected return type
-        if (!_can_assign(actualReturnType, expected_return_type)) {
+        if (!_can_assign(actualReturnType, curr_expected_return_type)) {
             output::errorMismatch(node.line);
         }
     } else {
         // Return without expression (void return)
-        if (expected_return_type != ast::BuiltInType::VOID) {
+        if (curr_expected_return_type != ast::BuiltInType::VOID) {
+            output::errorMismatch(node.line);
+        }
+    }
+    
+}
+
+void SemanticVisitor::visit(ast::If &node) {
+    symTable.enterScope();
+    node.condition->accept(*this);
+    if (node.condition->computedType != ast::BuiltInType::BOOL) {
+        output::errorMismatch(node.condition->line);
+    }
+
+    symTable.enterScope();
+    node.then->accept(*this);
+    symTable.exitScope();
+    symTable.exitScope();
+    if (node.otherwise) {
+        symTable.enterScope();
+        node.otherwise->accept(*this);
+        symTable.exitScope();
+    }
+    // symTable.exitScope();
+}
+
+void SemanticVisitor::visit(ast::While &node) {
+    symTable.enterScope();
+    in_while = true; // Set the flag to indicate we're in a while loop
+
+    node.condition->accept(*this);
+    if (node.condition->computedType != ast::BuiltInType::BOOL) {
+        output::errorMismatch(node.condition->line);
+    }
+
+    symTable.enterScope();
+
+    node.body->accept(*this);
+
+    symTable.exitScope();
+    in_while = false; // Reset the flag after exiting the while loop
+    symTable.exitScope();
+}
+
+void SemanticVisitor::visit(ast::VarDecl &node) {
+    node.type->accept(*this);
+
+    symTable.addVar(node.id->value, node.type->computedType, node.id->line, node.type->computedIsArray);
+
+    node.id->accept(*this);
+
+
+    if (node.init_exp) {
+        node.init_exp->accept(*this);
+        // If there is an initial value, check if it matches the type
+        if (!_can_assign(node.init_exp->computedType, node.type->computedType)) {
+            output::errorMismatch(node.line);
+        }
+    } else {
+        // If there is no initial value, ensure the type is not void
+        if (node.type->computedType == ast::BuiltInType::VOID) {
             output::errorMismatch(node.line);
         }
     }
 }
 
-void SemanticVisitor::visit(ast::If &node) {
-    // TODO: Implement
-}
-
-void SemanticVisitor::visit(ast::While &node) {
-}
-
-void SemanticVisitor::visit(ast::VarDecl &node) {
-    // TODO: Implement
-}
-
 void SemanticVisitor::visit(ast::Formal &node) {
+    node.type->accept(*this);
+    
     symTable.addParam(node.id->value, node.type->computedType, node.id->line);
 }
 
@@ -284,9 +339,13 @@ void SemanticVisitor::visit(ast::Formals &node) {
 }
 
 void SemanticVisitor::visit(ast::FuncDecl &node) {
+    node.id->accept(*this);
+    node.return_type->accept(*this);
+
+
     // Save the previous expected return type and set the new one
-    ast::BuiltInType prev_expected_return_type = expected_return_type;
-    expected_return_type = node.return_type->computedType;
+    ast::BuiltInType prev_expected_return_type = curr_expected_return_type;
+    curr_expected_return_type = node.return_type->computedType;
     
     symTable.enterScope();
 
@@ -298,7 +357,7 @@ void SemanticVisitor::visit(ast::FuncDecl &node) {
     symTable.exitScope();
     
     // Restore the previous expected return type
-    expected_return_type = prev_expected_return_type;
+    curr_expected_return_type = prev_expected_return_type;
 }
 
 void SemanticVisitor::visit(ast::Funcs &node) {
@@ -306,11 +365,27 @@ void SemanticVisitor::visit(ast::Funcs &node) {
     for (auto &func : node.funcs)
     {
         std::vector<ast::BuiltInType> paramTypes;
+
         for (const auto &formal : func->formals->formals)
         {
+            formal->type->accept(*this);
             paramTypes.push_back(formal->type->computedType);
         }
         symTable.addFunc(func->id->value, func->return_type->computedType, func->id->line, paramTypes);
+    }
+
+    //check if there one and only one main function
+    bool has_main = false;
+    for (const auto &func : node.funcs)
+    {
+        if (func->id->value == "main" && func->return_type->computedType == ast::BuiltInType::VOID &&
+            func->formals->formals.empty())
+        {
+            if (has_main) {
+                output::errorMainMissing();
+            }
+            has_main = true;
+        }
     }
 
     // then visiting each function to process its body

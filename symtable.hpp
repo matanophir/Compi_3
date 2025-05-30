@@ -15,12 +15,13 @@ struct Symbol {
     int offset;
     int lineno; 
     bool isFunction;
+    bool isArray;
     std::vector<ast::BuiltInType> paramTypes; // For functions
 
     Symbol() = default;
     
-    Symbol(const std::string& n, ast::BuiltInType t, int lineno, int o, bool isFunc = false) 
-        : name(n), type(t), offset(o), lineno(lineno), isFunction(isFunc) {}
+    Symbol(const std::string& n, ast::BuiltInType t, int lineno, int o, bool isFunc = false, bool isArr = false) 
+        : name(n), type(t), offset(o), lineno(lineno), isFunction(isFunc), isArray(isArr) {}
     
     std::vector<std::string> types_as_string();
 };
@@ -63,7 +64,7 @@ public:
     Scope& getCurrentScope();
     
     // Symbol management
-    void addVar(const std::string& name, ast::BuiltInType type, int lineno);
+    void addVar(const std::string& name, ast::BuiltInType type, int lineno, bool isArray = false);
     void addFunc(const std::string& name, ast::BuiltInType returnType, int lineno,
                  const std::vector<ast::BuiltInType>& paramTypes);
     void addParam(const std::string& name, ast::BuiltInType type, int lineno);

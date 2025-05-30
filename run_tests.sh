@@ -19,7 +19,7 @@ for test_in in tests/t*.in; do
 
     echo -n "Running $test_name... "
 
-    ./hw2 < "$test_in" 2>&1 > "$test_res"
+    ./hw3 < "$test_in" 2>&1 > "$test_res"
 
     if diff "$test_res" "$test_out" > /dev/null; then
         echo "PASSED"

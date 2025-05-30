@@ -53,6 +53,7 @@ namespace ast {
     public:
         Exp() = default;
         BuiltInType computedType = BuiltInType::VOID;
+        bool computedIsArray = false;
     };
 
     /* Base class for all statements */
@@ -227,6 +228,7 @@ namespace ast {
     };    class Type : virtual public Node {
         public:
             BuiltInType computedType = BuiltInType::VOID;
+            bool computedIsArray = false;
             
             Type() = default;
         };    /* Type symbol */

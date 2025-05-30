@@ -59,7 +59,7 @@ Scope& SymTable::getCurrentScope() {
     return scopesStack.top();
 }
 
-void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno) {
+void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno, bool isArray) {
 
     _check_before_add(name);
     
@@ -69,7 +69,7 @@ void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno
     }
     
     int currentOffset = offsetsStack.top();
-    Symbol entry(name, type, lineno, currentOffset, false);
+    Symbol entry(name, type, lineno, currentOffset, false, isArray);
     scopesStack.top().table.push_back(entry);
     symbols[name] = entry;
     
@@ -83,7 +83,7 @@ void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, int
     
     _check_before_add(name);
     
-    Symbol entry(name, returnType, lineno, 0, true);
+    Symbol entry(name, returnType, lineno, 0, true, false);
     entry.paramTypes = paramTypes;
     scopesStack.top().table.push_back(entry);
     symbols[name] = entry;
@@ -98,7 +98,7 @@ void SymTable::addParam(const std::string& name, ast::BuiltInType type, int line
     offsetsStack.top() -= 1;
     int currentOffset = offsetsStack.top();
     
-    Symbol entry(name, type, lineno, currentOffset, false);
+    Symbol entry(name, type, lineno, currentOffset, false, false);
     // Insert at the beginning of the vector for reverse order
     scopesStack.top().table.insert(scopesStack.top().table.begin(), entry);
     symbols[name] = entry;
@@ -122,5 +122,5 @@ Symbol* SymTable::lookup(const std::string& name) {
 }
 
 void SymTable::printScopes() const {
-    std::cout << scopePrinter << std::endl;
+    std::cout << scopePrinter;
 }
