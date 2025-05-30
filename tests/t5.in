@@ -1,0 +1,15 @@
+
+
+// test comment
+void printOk(bool isOk) {
+    int i = 0;
+    while (i < 10) {
+        print("i = ");
+        printi(i);
+        i = i + 1;
+    }
+    if (isOk) {
+        int x = 0;
+        print("ok");
+    } else print("not ok");
+}

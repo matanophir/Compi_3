@@ -1,0 +1,8 @@
+void main() {
+    print("HELLO") ;	
+    int arr1[3];
+    int x;
+    x = arr1;
+    //arr1 = 5;
+}
+

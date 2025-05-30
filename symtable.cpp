@@ -26,11 +26,7 @@ void SymTable::_check_before_add(const std::string& name) {
     Symbol* existingSymbol = lookup(name);
     if (existingSymbol != nullptr)
     {
-        if (existingSymbol->isFunction) {
-            output::errorDefAsFunc(existingSymbol->lineno, name);
-        } else {
-            output::errorDefAsVar(existingSymbol->lineno, name);
-        }
+        output::errorDef(existingSymbol->lineno, name);
     }
 }
 

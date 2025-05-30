@@ -1,0 +1,5 @@
+void main() {
+    int arr1[3];
+    int x = arr1[0];
+    arr1[1] = x;  
+}

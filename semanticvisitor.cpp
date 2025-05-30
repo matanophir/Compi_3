@@ -41,6 +41,9 @@ void SemanticVisitor::visit(ast::ID &node) {
     if (!symbol) {
         output::errorUndef(node.line, node.value);
     }
+    if (symbol->isFunction) { // only vars should reach here
+        output::errorDefAsFunc(node.line, node.value);
+    }
     node.computedType = symbol->type;
     node.computedIsArray = symbol->isArray;
 }
@@ -132,14 +135,17 @@ void SemanticVisitor::visit(ast::Assign &node) {
 
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
-    if (!_can_assign(node.exp->computedType, symbol->type)) 
+    if (!_can_assign(node.exp->computedType, symbol->type)) {
+        std::cout << "Assigning " << node.exp->computedType << " to " << symbol->type << std::endl;
         output::errorMismatch(node.line);
+    }
 
     if (symbol->isArray) 
         output::ErrorInvalidAssignArray(node.id->line, node.id->value);
 
     if (node.exp->computedIsArray)
         output::errorMismatch(node.line);
+
 
 }
 
@@ -185,10 +191,13 @@ void SemanticVisitor::visit(ast::ExpList &node) {
 }
 
 void SemanticVisitor::visit(ast::Call &node) {
-    node.func_id->accept(*this);
+    // node.func_id->accept(*this);
     node.args->accept(*this);
 
     Symbol* symbol = symTable.lookup(node.func_id->value);
+    if (!symbol) { // didnt accept on id because its a func 
+        output::errorUndefFunc(node.line, node.func_id->value);
+    }
 
     if (!symbol->isFunction)
         output::errorDefAsVar(node.func_id->line, node.func_id->value);
@@ -339,7 +348,6 @@ void SemanticVisitor::visit(ast::Formals &node) {
 }
 
 void SemanticVisitor::visit(ast::FuncDecl &node) {
-    node.id->accept(*this);
     node.return_type->accept(*this);
 
 
@@ -382,10 +390,13 @@ void SemanticVisitor::visit(ast::Funcs &node) {
             func->formals->formals.empty())
         {
             if (has_main) {
-                output::errorMainMissing();
+                output::errorMainMissing(); // Duplicate main function
             }
             has_main = true;
         }
+    }
+    if (!has_main) {
+        output::errorMainMissing();
     }
 
     // then visiting each function to process its body

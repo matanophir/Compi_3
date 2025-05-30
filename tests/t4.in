@@ -1,0 +1,16 @@
+void main() {
+    int x = (4 + 7) * 12;
+    byte y = 1b;
+    intFun((x< y), x , x , y);
+    int z;
+}
+
+
+int intFun(bool a, int c, int d, byte e) {
+	int tmp = c + e;
+	bool b = (a);
+	if (a and (c < d) ) {
+		byte j = (e);
+	}
+	return tmp;
+}
