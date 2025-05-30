@@ -24,16 +24,16 @@ namespace ast {
         GT, // Greater than
         LE, // Less than or equal
         GE  // Greater than or equal
-    };
-
-    /* Built-in types */
+    };    /* Built-in types */
     enum BuiltInType {
+        UNDEF,
         VOID,
         BOOL,
         BYTE,
         INT,
         STRING
     };
+
 
     /* Base class for all AST nodes */
     class Node {
@@ -52,6 +52,7 @@ namespace ast {
     class Exp : virtual public Node {
     public:
         Exp() = default;
+        BuiltInType computedType = BuiltInType::VOID;
     };
 
     /* Base class for all statements */
@@ -223,35 +224,30 @@ namespace ast {
         void accept(Visitor &visitor) override {
             visitor.visit(*this);
         }
-    };
-
-    class Type : virtual public Node {
+    };    class Type : virtual public Node {
         public:
+            BuiltInType computedType = BuiltInType::VOID;
+            
             Type() = default;
-        };    
-
-    /* Type symbol */
+        };    /* Type symbol */
     class PrimitiveType : public Type {
     public:
-        // Type
         BuiltInType type;
-
-        // Constructor that receives the typeSS
-        explicit PrimitiveType(BuiltInType type);
+        
+        // Constructor that receives the type
+        explicit PrimitiveType(BuiltInType type) : type(type) {}
 
         void accept(Visitor &visitor) override {
             visitor.visit(*this);
         }
-    };
-
-    /* Type symbol For Array*/
+    };    /* Type symbol For Array*/
     class ArrayType : public Type {
         public:
             BuiltInType type;
             std::shared_ptr<Exp> length;
             
-            // Constructor that receives the type
-            explicit ArrayType(BuiltInType type, std::shared_ptr<Exp> length);
+            // Constructor that receives the type and length
+            ArrayType(BuiltInType type, std::shared_ptr<Exp> length) : type(type), length(length) {}
     
             void accept(Visitor &visitor) override {
                 visitor.visit(*this);
@@ -461,10 +457,10 @@ namespace ast {
         // Identifier of the parameter
         std::shared_ptr<ID> id;
         // Type of the parameter
-        std::shared_ptr<PrimitiveType> type;
+        std::shared_ptr<Type> type;
 
         // Constructor that receives the identifier and the type
-        Formal(std::shared_ptr<ID> id, std::shared_ptr<PrimitiveType> type);
+        Formal(std::shared_ptr<ID> id, std::shared_ptr<Type> type);
 
         void accept(Visitor &visitor) override {
             visitor.visit(*this);
@@ -500,14 +496,14 @@ namespace ast {
         // Identifier of the function
         std::shared_ptr<ID> id;
         // Return type of the function
-        std::shared_ptr<PrimitiveType> return_type;
+        std::shared_ptr<Type> return_type;
         // List of formal parameters
         std::shared_ptr<Formals> formals;
         // Body of the function
         std::shared_ptr<Statements> body;
 
         // Constructor that receives the identifier, the return type, the list of formal parameters, and the body
-        FuncDecl(std::shared_ptr<ID> id, std::shared_ptr<PrimitiveType> return_type, std::shared_ptr<Formals> formals, std::shared_ptr<Statements> body);
+        FuncDecl(std::shared_ptr<ID> id, std::shared_ptr<Type> return_type, std::shared_ptr<Formals> formals, std::shared_ptr<Statements> body);
 
         void accept(Visitor &visitor) override {
             visitor.visit(*this);

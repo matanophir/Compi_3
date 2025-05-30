@@ -1,39 +1,67 @@
 #include "symtable.hpp"
 #include <iostream>
 
+
+std::vector<std::string> Symbol::types_as_string() {
+    std::vector<std::string> typeStrings;
+    for (const auto& type : paramTypes) {
+        typeStrings.push_back(output::toString(type));
+    }
+    return typeStrings;
+}
+
 /* SymTable class implementation */
 
 SymTable::SymTable() {
     // Initialize with global scope
-    enterScope();
-    addFunc("print", ast::BuiltInType::VOID, {ast::BuiltInType::STRING});
-    addFunc("printi", ast::BuiltInType::VOID, {ast::BuiltInType::INT});
+    scopesStack.push(Scope());
+    int currentOffset = 0;
+    offsetsStack.push(currentOffset);
+
+    addFunc("print", ast::BuiltInType::VOID, 0, {ast::BuiltInType::STRING});
+    addFunc("printi", ast::BuiltInType::VOID, 0, {ast::BuiltInType::INT});
+}
+
+void SymTable::_check_before_add(const std::string& name) {
+    Symbol* existingSymbol = lookup(name);
+    if (existingSymbol != nullptr)
+    {
+        if (existingSymbol->isFunction) {
+            output::errorDefAsFunc(existingSymbol->lineno, name);
+        } else {
+            output::errorDefAsVar(existingSymbol->lineno, name);
+        }
+    }
 }
 
 void SymTable::enterScope() {
-    tablesStack.push(Table());
-    int currentOffset = offsetsStack.empty() ? 0 : offsetsStack.top();
+    scopesStack.push(Scope());
+
+    int currentOffset = offsetsStack.top();
     offsetsStack.push(currentOffset);
+
     scopePrinter.beginScope();
 }
 
 void SymTable::exitScope() {
     // Remove symbols from global map for this scope
-    Table& currentTable = tablesStack.top();
+    Table& currentTable = scopesStack.top().table;
     for (const auto& entry : currentTable) {
         symbols.erase(entry.name);
     }
     
-    tablesStack.pop();
+    scopesStack.pop();
     offsetsStack.pop();
     scopePrinter.endScope();
 }
 
-void SymTable::addVar(const std::string& name, ast::BuiltInType type) {
-    if (exists(name)) {
-        // Symbol already exists - this is an error
-        return;
-    }
+Scope& SymTable::getCurrentScope() {
+    return scopesStack.top();
+}
+
+void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno) {
+
+    _check_before_add(name);
     
     // If offset is negative, reset to 0 for local variables
     if (offsetsStack.top() < 0) {
@@ -41,8 +69,8 @@ void SymTable::addVar(const std::string& name, ast::BuiltInType type) {
     }
     
     int currentOffset = offsetsStack.top();
-    Symbol entry(name, type, currentOffset, false);
-    tablesStack.top().push_back(entry);
+    Symbol entry(name, type, lineno, currentOffset, false);
+    scopesStack.top().table.push_back(entry);
     symbols[name] = entry;
     
     scopePrinter.emitVar(name, type, currentOffset);
@@ -50,34 +78,29 @@ void SymTable::addVar(const std::string& name, ast::BuiltInType type) {
     offsetsStack.top() += 1;
 }
 
-void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, 
+void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, int lineno,
                        const std::vector<ast::BuiltInType>& paramTypes) {
-    if (exists(name)) {
-        // Symbol already exists - this is an error
-        return;
-    }
     
-    Symbol entry(name, returnType, 0, true);
+    _check_before_add(name);
+    
+    Symbol entry(name, returnType, lineno, 0, true);
     entry.paramTypes = paramTypes;
-    tablesStack.top().push_back(entry);
+    scopesStack.top().table.push_back(entry);
     symbols[name] = entry;
     
     scopePrinter.emitFunc(name, returnType, paramTypes);
 }
 
-void SymTable::addParam(const std::string& name, ast::BuiltInType type) {
-    if (exists(name)) {
-        // Symbol already exists - this is an error
-        return;
-    }
+void SymTable::addParam(const std::string& name, ast::BuiltInType type, int lineno) {
     
+    _check_before_add(name);
     // Decrement offset first to get negative values
     offsetsStack.top() -= 1;
     int currentOffset = offsetsStack.top();
     
-    Symbol entry(name, type, currentOffset, false);
+    Symbol entry(name, type, lineno, currentOffset, false);
     // Insert at the beginning of the vector for reverse order
-    tablesStack.top().insert(tablesStack.top().begin(), entry);
+    scopesStack.top().table.insert(scopesStack.top().table.begin(), entry);
     symbols[name] = entry;
     
     scopePrinter.emitVar(name, type, currentOffset);

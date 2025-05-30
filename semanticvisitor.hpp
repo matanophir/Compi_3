@@ -9,6 +9,11 @@ class SemanticVisitor : public Visitor
 {
 private:
     SymTable symTable;
+    ast::BuiltInType expected_return_type;
+    bool in_while;
+
+    bool _is_numeric(ast::BuiltInType type);
+    bool _can_assign(ast::BuiltInType from, ast::BuiltInType to);
     
 public:
     SemanticVisitor();

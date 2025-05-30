@@ -6,6 +6,8 @@ namespace output {
 
     static std::string toString(ast::BuiltInType type) {
         switch (type) {
+            case ast::BuiltInType::UNDEF:
+                return "undef";
             case ast::BuiltInType::INT:
                 return "int";
             case ast::BuiltInType::BOOL:

@@ -8,6 +8,8 @@
 namespace output {
     /* Error handling functions */
 
+    static std::string toString(ast::BuiltInType type); 
+
     void errorLex(int lineno);
 
     void errorSyn(int lineno);
