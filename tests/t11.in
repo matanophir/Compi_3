@@ -1,0 +1,25 @@
+void main() {
+    int x = (4 + 7) * 12;
+    byte y = 1100b;
+    printOk((x > y) and (x < 100));
+    int z[5];
+    printi(y);
+}
+
+// test comment
+void printOk(bool isOk) {
+    int i = 0;
+    while (i < 10) {
+        print("i = ");
+        printi(i);
+        i = i + 1;
+    }
+    if (isOk) {
+        int x = 0;
+        print("ok");
+    } else print("not ok");
+}
+
+int inc(int x){
+    bool f;
+}

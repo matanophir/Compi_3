@@ -136,7 +136,6 @@ void SemanticVisitor::visit(ast::Assign &node) {
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
     if (!_can_assign(node.exp->computedType, symbol->type)) {
-        std::cout << "Assigning " << node.exp->computedType << " to " << symbol->type << std::endl;
         output::errorMismatch(node.line);
     }
 
@@ -158,7 +157,7 @@ void SemanticVisitor::visit(ast::ArrayAssign &node) {
 
     if (!_can_assign(node.exp->computedType, symbol->type)) 
     {
-        output::errorMismatch(node.line);
+        output::errorMismatch(node.line);//TODO: invaidAssignArray?
     }
 
     if (!_is_numeric(node.index->computedType)) 
