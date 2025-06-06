@@ -1,0 +1,9 @@
+void main(){
+	int x =5;
+	int y[5];
+	y[x] =5;
+	int m[x];
+	byte z = 4b;
+	bool w[3];
+	int a;
+}
