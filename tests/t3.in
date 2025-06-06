@@ -1,5 +1,7 @@
-void main() {
-    int arr1[3];
-    int x = arr1[0];
-    arr1[1] = x;  
+void main(){
+	int x =5;
+	int y[17];
+	byte z = 4b;
+	bool w[3];
+	int a;
 }

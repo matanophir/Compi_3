@@ -23,9 +23,8 @@ void SemanticVisitor::visit(ast::NumB &node) {
     node.computedType = ast::BuiltInType::BYTE;
 
     // Check if the value is within the byte range
-    int value = std::stoi(std::to_string(node.value), nullptr, 2);
-    if (value > 255)
-        output::errorByteTooLarge(node.line, value);
+    if (node.value > 255)
+        output::errorByteTooLarge(node.line, node.value);
 }
 
 void SemanticVisitor::visit(ast::String &node) {
@@ -110,6 +109,24 @@ void SemanticVisitor::visit(ast::Or &node) {
 void SemanticVisitor::visit(ast::ArrayType &node) {
     node.computedType = node.type;
     node.computedIsArray = true;
+    
+    // Visit the length expression to get its type
+    node.length->accept(*this);
+    
+    // Validate that array size is either Num or NumB
+    ast::Num* numExp = dynamic_cast<ast::Num*>(node.length.get());
+    ast::NumB* numBExp = dynamic_cast<ast::NumB*>(node.length.get());
+    
+    if (numExp) {
+        // It's a Num expression - store the value
+        node.computedArrLength = numExp->value;
+    } else if (numBExp) {
+        // It's a NumB expression - store the value
+        node.computedArrLength = numBExp->value;
+    } else {
+        // Invalid array size expression - only Num and NumB are allowed
+        output::errorMismatch(node.line);
+    }
 }
 
 void SemanticVisitor::visit(ast::PrimitiveType &node) {
@@ -157,7 +174,7 @@ void SemanticVisitor::visit(ast::ArrayAssign &node) {
 
     if (!_can_assign(node.exp->computedType, symbol->type)) 
     {
-        output::errorMismatch(node.line);//TODO: invaidAssignArray?
+        output::errorMismatch(node.line);
     }
 
     if (!_is_numeric(node.index->computedType)) 
@@ -314,10 +331,15 @@ void SemanticVisitor::visit(ast::While &node) {
 void SemanticVisitor::visit(ast::VarDecl &node) {
     node.type->accept(*this);
 
-    symTable.addVar(node.id->value, node.type->computedType, node.id->line, node.type->computedIsArray);
+    // Get array length if it's an array type
+    int arrayLength = -1;
+    if (node.type->computedIsArray) {
+        arrayLength = node.type->computedArrLength;
+    }
+
+    symTable.addVar(node.id->value, node.type->computedType, node.id->line, node.type->computedIsArray, arrayLength);
 
     node.id->accept(*this);
-
 
     if (node.init_exp) {
         node.init_exp->accept(*this);

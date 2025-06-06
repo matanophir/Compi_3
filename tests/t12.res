@@ -1,1 +1,1 @@
-line 20: type mismatch
+line 3: byte value 1100 out of range

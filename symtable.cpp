@@ -55,7 +55,7 @@ Scope& SymTable::getCurrentScope() {
     return scopesStack.top();
 }
 
-void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno, bool isArray) {
+void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno, bool isArray, int arrLength) {
 
     _check_before_add(name);
     
@@ -65,13 +65,19 @@ void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno
     }
     
     int currentOffset = offsetsStack.top();
-    Symbol entry(name, type, lineno, currentOffset, false, isArray);
+    Symbol entry(name, type, lineno, currentOffset, false, isArray, arrLength);
     scopesStack.top().table.push_back(entry);
     symbols[name] = entry;
     
-    scopePrinter.emitVar(name, type, currentOffset);
-    // Increment offset directly
-    offsetsStack.top() += 1;
+    if (isArray) {
+        scopePrinter.emitArr(name, type, arrLength, currentOffset);
+        // Increment offset by array length for arrays
+        offsetsStack.top() += arrLength;
+    } else {
+        scopePrinter.emitVar(name, type, currentOffset);
+        // Increment offset by 1 for regular variables
+        offsetsStack.top() += 1;
+    }
 }
 
 void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, int lineno,
@@ -79,7 +85,7 @@ void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, int
     
     _check_before_add(name);
     
-    Symbol entry(name, returnType, lineno, 0, true, false);
+    Symbol entry(name, returnType, lineno, 0, true, false, -1);
     entry.paramTypes = paramTypes;
     scopesStack.top().table.push_back(entry);
     symbols[name] = entry;
@@ -94,7 +100,7 @@ void SymTable::addParam(const std::string& name, ast::BuiltInType type, int line
     offsetsStack.top() -= 1;
     int currentOffset = offsetsStack.top();
     
-    Symbol entry(name, type, lineno, currentOffset, false, false);
+    Symbol entry(name, type, lineno, currentOffset, false, false, -1);
     // Insert at the beginning of the vector for reverse order
     scopesStack.top().table.insert(scopesStack.top().table.begin(), entry);
     symbols[name] = entry;

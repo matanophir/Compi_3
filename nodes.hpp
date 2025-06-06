@@ -229,9 +229,10 @@ namespace ast {
         public:
             BuiltInType computedType = BuiltInType::VOID;
             bool computedIsArray = false;
+            int computedArrLength = -1;
             
             Type() = default;
-        };    /* Type symbol */
+        };/* Type symbol */
     class PrimitiveType : public Type {
     public:
         BuiltInType type;
