@@ -53,7 +53,7 @@ private:
     // ScopePrinter for output
     output::ScopePrinter scopePrinter;
 
-    void _check_before_add(const std::string& name);
+    void _check_before_add(const std::string& name, int lineno);
 
 public:
     SymTable();

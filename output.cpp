@@ -99,7 +99,7 @@ namespace output {
     }
 
     void ErrorInvalidAssignArray(int lineno, const std::string &id_arr) {
-        std::cout << "line " << lineno << ": invalid assignment to/from array " << id_arr << std::endl;
+        std::cout << "line " << lineno << ": invalid assignment to array " << id_arr << std::endl;
         exit(0);
     }
 
@@ -153,6 +153,4 @@ namespace output {
         os << "---end global scope---" << std::endl;
         return os;
     }
-
-
 }

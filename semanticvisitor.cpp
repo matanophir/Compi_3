@@ -140,6 +140,9 @@ void SemanticVisitor::visit(ast::ArrayDereference &node) {
     if (!_is_numeric(node.index->computedType)) {
         output::errorMismatch(node.line);
     }
+    if (node.id->computedIsArray == false) {
+        output::errorMismatch(node.line); //TODO: not sure what error should be here
+    }
 
     node.computedType = node.id->computedType;
     node.computedIsArray = true;
@@ -152,26 +155,33 @@ void SemanticVisitor::visit(ast::Assign &node) {
 
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
-    if (!_can_assign(node.exp->computedType, symbol->type)) {
+    if (node.exp->computedIsArray)
         output::errorMismatch(node.line);
-    }
 
     if (symbol->isArray) 
         output::ErrorInvalidAssignArray(node.id->line, node.id->value);
 
-    if (node.exp->computedIsArray)
+    if (!_can_assign(node.exp->computedType, symbol->type)) {
         output::errorMismatch(node.line);
+    }
+
+
+
 
 
 }
 
 void SemanticVisitor::visit(ast::ArrayAssign &node) {
+    node.exp->accept(*this);
     node.id->accept(*this);
     node.index->accept(*this);
-    node.exp->accept(*this);
 
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
+    if (symbol->isArray == false) 
+    {
+        output::errorMismatch(node.id->line);
+    }
     if (!_can_assign(node.exp->computedType, symbol->type)) 
     {
         output::errorMismatch(node.line);

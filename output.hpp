@@ -1,8 +1,10 @@
 #ifndef OUTPUT_HPP
 #define OUTPUT_HPP
 
+#include <vector>
 #include <string>
 #include <sstream>
+#include "visitor.hpp"
 #include "nodes.hpp"
 
 namespace output {
@@ -65,7 +67,6 @@ namespace output {
 
         friend std::ostream &operator<<(std::ostream &os, const ScopePrinter &printer);
     };
-
 }
 
 #endif //OUTPUT_HPP

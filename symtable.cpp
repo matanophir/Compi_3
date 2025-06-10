@@ -22,11 +22,11 @@ SymTable::SymTable() {
     addFunc("printi", ast::BuiltInType::VOID, 0, {ast::BuiltInType::INT});
 }
 
-void SymTable::_check_before_add(const std::string& name) {
+void SymTable::_check_before_add(const std::string& name, int lineno) {
     Symbol* existingSymbol = lookup(name);
     if (existingSymbol != nullptr)
     {
-        output::errorDef(existingSymbol->lineno, name);
+        output::errorDef(lineno, name);
     }
 }
 
@@ -57,7 +57,7 @@ Scope& SymTable::getCurrentScope() {
 
 void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno, bool isArray, int arrLength) {
 
-    _check_before_add(name);
+    _check_before_add(name, lineno);
     
     // If offset is negative, reset to 0 for local variables
     if (offsetsStack.top() < 0) {
@@ -83,7 +83,7 @@ void SymTable::addVar(const std::string& name, ast::BuiltInType type, int lineno
 void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, int lineno,
                        const std::vector<ast::BuiltInType>& paramTypes) {
     
-    _check_before_add(name);
+    _check_before_add(name, lineno);
     
     Symbol entry(name, returnType, lineno, 0, true, false, -1);
     entry.paramTypes = paramTypes;
@@ -95,7 +95,7 @@ void SymTable::addFunc(const std::string& name, ast::BuiltInType returnType, int
 
 void SymTable::addParam(const std::string& name, ast::BuiltInType type, int lineno) {
     
-    _check_before_add(name);
+    _check_before_add(name, lineno);
     // Decrement offset first to get negative values
     offsetsStack.top() -= 1;
     int currentOffset = offsetsStack.top();
