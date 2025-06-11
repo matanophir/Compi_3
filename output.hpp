@@ -11,6 +11,7 @@ namespace output {
     /* Error handling functions */
 
     std::string toString(ast::BuiltInType type); 
+    std::string toStringCapital(ast::BuiltInType type);
 
     void errorLex(int lineno);
 

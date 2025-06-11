@@ -5,7 +5,7 @@
 std::vector<std::string> Symbol::types_as_string() {
     std::vector<std::string> typeStrings;
     for (const auto& type : paramTypes) {
-        typeStrings.push_back(output::toString(type));
+        typeStrings.push_back(output::toStringCapital(type));
     }
     return typeStrings;
 }
