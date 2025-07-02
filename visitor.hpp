@@ -17,6 +17,7 @@ namespace ast {
     class ExpList;
     class Call;
     class Statements;
+    class Block;
     class Break;
     class Continue;
     class Return;
@@ -73,6 +74,8 @@ public:
     virtual void visit(ast::Call &node) = 0;
 
     virtual void visit(ast::Statements &node) = 0;
+
+    virtual void visit(ast::Block &node) = 0;
 
     virtual void visit(ast::Break &node) = 0;
 

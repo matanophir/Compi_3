@@ -56,6 +56,8 @@ public:
 
     virtual void visit(ast::Statements &node) override;
 
+    virtual void visit(ast::Block &node) override;
+
     virtual void visit(ast::Break &node) override;
 
     virtual void visit(ast::Continue &node) override;

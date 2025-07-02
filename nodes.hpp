@@ -340,6 +340,20 @@ namespace ast {
         }
     };
 
+    /* Block statement - wraps statements with scope management */
+    class Block : public Statement {
+    public:
+        // Statements inside the block
+        std::shared_ptr<Statements> statements;
+
+        // Constructor that receives statements
+        explicit Block(std::shared_ptr<Statements> statements) : statements(statements) {}
+
+        void accept(Visitor &visitor) override {
+            visitor.visit(*this);
+        }
+    };
+
     /* Break statement */
     class Break : public Statement {
         void accept(Visitor &visitor) override {

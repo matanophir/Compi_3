@@ -112,7 +112,7 @@ Statements
     ;
 
 Statement 
-    : LBRACE Statements RBRACE                  { $$ = $2; }
+    : LBRACE Statements RBRACE                  { $$ = make_shared<ast::Block>(as<ast::Statements>($2)); }
     | Type ID SC                                { 
                                                   $$ = make_shared<ast::VarDecl>(as<ast::ID>($2), as<ast::PrimitiveType>($1)); 
                                                 }
