@@ -1,0 +1,23 @@
+// Test mt000.in – initial advanced test
+// Expected: PASS
+//initial advanced test
+int foo (int x){
+    int a = x*x ;
+    byte i;
+    i = 0;
+    while (i<x){
+        int b = 3;
+        i = i+b;
+        b = b+i;
+        if (i>b){
+            break;
+        }
+        continue;
+        continue;
+        if (i>x){
+            i = i/4;
+            break;
+        }
+    }
+    return b;
+}

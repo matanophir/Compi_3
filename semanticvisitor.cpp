@@ -145,7 +145,7 @@ void SemanticVisitor::visit(ast::ArrayDereference &node) {
     }
 
     node.computedType = node.id->computedType;
-    node.computedIsArray = true;
+    // computedIsArray is already set to false. its a dereference and there cannot be an array. 
 
 }
 
@@ -155,8 +155,9 @@ void SemanticVisitor::visit(ast::Assign &node) {
 
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
-    if (node.exp->computedIsArray)
+    if (node.exp->computedIsArray){
         output::errorMismatch(node.line);
+    }
 
     if (symbol->isArray) 
         output::ErrorInvalidAssignArray(node.id->line, node.id->value);
@@ -178,10 +179,15 @@ void SemanticVisitor::visit(ast::ArrayAssign &node) {
 
     Symbol* symbol = symTable.lookup(node.id->value); // was found in the symbol table
 
+    if (node.exp->computedIsArray){
+        output::errorMismatch(node.line);
+    }
+
     if (symbol->isArray == false) 
     {
         output::errorMismatch(node.id->line);
     }
+
     if (!_can_assign(node.exp->computedType, symbol->type)) 
     {
         output::errorMismatch(node.line);
@@ -353,6 +359,11 @@ void SemanticVisitor::visit(ast::VarDecl &node) {
 
     if (node.init_exp) {
         node.init_exp->accept(*this);
+
+        if (node.init_exp->computedIsArray) {
+            output::errorMismatch(node.line);
+        }
+
         // If there is an initial value, check if it matches the type
         if (!_can_assign(node.init_exp->computedType, node.type->computedType)) {
             output::errorMismatch(node.line);
@@ -410,6 +421,7 @@ void SemanticVisitor::visit(ast::Funcs &node) {
             formal->type->accept(*this);
             paramTypes.push_back(formal->type->computedType);
         }
+        func->return_type->accept(*this);
         symTable.addFunc(func->id->value, func->return_type->computedType, func->id->line, paramTypes);
     }
 

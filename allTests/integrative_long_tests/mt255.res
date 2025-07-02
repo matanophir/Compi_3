@@ -1,0 +1,16 @@
+---begin global scope---
+print (string) -> void
+printi (int) -> void
+fact (int) -> int
+main () -> void
+  ---begin scope---
+  n int -1
+    ---begin scope---
+      ---begin scope---
+      ---end scope---
+    ---end scope---
+  ---end scope---
+  ---begin scope---
+  val int 0
+  ---end scope---
+---end global scope---
